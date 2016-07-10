@@ -1,98 +1,150 @@
 html {
-  height: 100%;
-}
-
-body {
-  padding: 0;
-  margin: 0;
-  min-height: 100%;
+  --base-font-size: 10px;
+  --base-line-height: calc(10px * 1.5);
+  --base-spacing: calc(10px * 2);
+  --color-gray-light: #ddd;
+  --color-red: #f00;
+  --color-green: #0f0;
+  --color-blue: #00f;
 }
 
 * {
-  font-family: Input Sans Condensed;
-  font-size: 10px;
+  box-sizing: border-box;
+  font-family: Input Mono Narrow;
+  font-size: var(--base-font-size);
+  line-height: var(--base-line-height);
 }
 
-.artboard {
-  box-sizing: border-box;
-  width: 1280px;
-  height: 600px;
-  padding: 25px 25px 50px 50px;
+svg *,
+#data {
+  font-family: Input Mono Compressed;
+}
+
+.panes {
+}
+
+.pane {
+  padding: var(--base-spacing);
+}
+
+.pane-left {
+  width: 400px;
+  background: rgba(245, 245, 245, 0.95);
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  overflow: auto;
+  transform: translateX(-399px);
+  transition: transform 0.25s ease-in-out 0s;
+}
+
+.pane-left:hover,
+.pane-left.is-initial {
+  transform: translateX(0);
+}
+
+.pane-right {
+}
+
+.config-group {
+  margin-bottom: var(--base-line-height);
+}
+
+.config h1 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.config label {
+  display: block;
+  margin-bottom: calc(var(--base-line-height) / 4);
+}
+
+.config input,
+.config textarea,
+.config select,
+.config button {
+  display: block;
+  width: 100%;
+  margin: 0;
+  outline: none;
+}
+
+.config input,
+.config textarea {
+  -webkit-appearance: none;
+  padding: 0 calc(var(--base-spacing) / 4);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  height: calc(var(--base-line-height) + 2px);
+}
+
+.config textarea {
+  height: calc(var(--base-line-height) * 5 + 2px);
+}
+
+.config input:focus,
+.config textarea:focus {
+  border-color: var(--color-blue);
 }
 
 .results {
-  margin: 10px;
   border-collapse: collapse;
+  width: 100%;
 }
 
 .results td,
 .results th {
-  border: 1px solid #ccc;
-  padding: 0 5px;
+  border: 1px solid var(--color-gray-light);
+  padding: 0 calc(var(--base-spacing) / 2);
+  line-height: var(--base-line-height);
+  height: var(--base-line-height);
 }
 
 .results td {
   text-align: right;
 }
 
-.config {
-  box-sizing: border-box;
-  margin: 10px;
-  overflow: hidden;
-}
-
-.config div {
-  float: left;
-  margin-left: 10px;
-}
-
-.config div:first-child {
-  margin-left: 0;
-}
-
-.config label {
-  display: block;
+.artboard {
+  height: 685px;
+  margin-bottom: var(--base-spacing);
 }
 
 .artboard svg {
   overflow: visible;
 }
 
-.tick line {
-  opacity: 0.15;
+.artboard .axis .domain {
+  stroke: var(--color-gray-light);
 }
 
-.line {
+.artboard .tick line {
+  stroke: var(--color-gray-light);
+}
+
+.artboard .tick text {
+  text-shadow: 0 0 1px #fff, 0 0 2px #fff, 0 0 4px #fff, 0 0 8px #fff, 0 0 16px #fff;
+}
+
+.artboard .line {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
+  opacity: 0.75;
 }
 
-.line-analysis {
+.artboard .line-analysis {
   stroke-width: 4px;
 }
 
-.line-original {
-  stroke-width: 2px;
-  opacity: 0.05;
+.artboard .line-0 {
+  stroke: var(--color-blue);
 }
 
-.line-0 {
-  stroke: #f00;
+.artboard .line-1 {
+  stroke: var(--color-red);
 }
 
-.line-1 {
-  stroke: #00f;
-}
-
-.line-2 {
-  stroke: #0f0;
-}
-
-.line-3 {
-  stroke: #ff0;
-}
-
-.line-4 {
-  stroke: #0ff;
+.artboard .line-2 {
+  stroke: var(--color-green);
 }

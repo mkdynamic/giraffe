@@ -1,12 +1,12 @@
 // data must be rows of (TIME_FMT VALUE), gaps allowed, unsorted
-var parse = function(opts) {
+var parseData = function(opts) {
   var raw = opts.raw;
   var timeFmt = opts.timeFmt;
   var parseTime = d3.timeParse(timeFmt);
   var idxs = opts.idxs;
 
   return raw.split(/\n+/).map(function(line) {
-    var cols = line.split(/\s+/);
+    var cols = line.split(/\s+|,/);
     return {
       t: parseTime(cols[idxs.time]),
       v: parseFloat(cols[idxs.value])
@@ -104,10 +104,10 @@ var drawChart = function(opts) {
   // reset
   document.querySelectorAll('.artboard svg').forEach(function(el) { el.remove(); });
 
-  var plotType = 'analyzed';
-
+  var plotType = opts.plotType;
   var series = opts.series;
   var artboard = opts.artboard;
+
   var artboardStyle = getComputedStyle(artboard, null);
   var paddingH = parseFloat(artboardStyle.getPropertyValue('padding-left')) +
     parseFloat(artboardStyle.getPropertyValue('padding-right'));
@@ -115,6 +115,7 @@ var drawChart = function(opts) {
     parseFloat(artboardStyle.getPropertyValue('padding-bottom'));
   var width = artboard.clientWidth - paddingH;
   var height = artboard.clientHeight - paddingV;
+
   var allData = series.reduce(function(m, s) { return m.concat(s[plotType]); }, []);
   var yExtentAuto = d3.extent(allData, function(d) { return d.v; });
   var yExtent = [
@@ -135,26 +136,74 @@ var drawChart = function(opts) {
     .y(function(d) { return y(d.v); });
 
   var svg = d3.select(artboard)
-    .append('svg');
+    .append('svg')
+    .attr('width', width)
+    .attr('height', height);
+
+  var axisXTickFormatter = function(label, idx, ticks) {
+    return idx === 0 || idx === ticks.length - 1 ? '' : x.tickFormat().apply(x, arguments);
+  };
+
+  var axisYTickFormatter = function(label, idx, ticks) {
+    return idx === 0 || idx === ticks.length - 1 ? '' : y.tickFormat().apply(y, arguments);
+  };
+
+  var axisYTicks = Math.floor(height / 50); // give at least 50px height per tick
+  var axisXTicks = Math.floor(width / 75); // give at least 100px width per tick
+  var axisPadding = 10;
+
+  var axisXBottom = d3.axisTop(x)
+    .tickSizeInner(height)
+    .tickSizeOuter(0)
+    .tickPadding(-height + axisPadding)
+    .ticks(axisXTicks)
+    .tickFormat(axisXTickFormatter);
+
+  var axisXTop = d3.axisBottom(x)
+    .tickSizeInner(0)
+    .tickSizeOuter(0)
+    .tickPadding(axisPadding)
+    .ticks(axisXTicks)
+    .tickFormat(axisXTickFormatter);
+
+  var axisYLeft = d3.axisRight(y)
+    .tickSizeInner(width)
+    .tickSizeOuter(0)
+    .tickPadding(-width + axisPadding)
+    .ticks(axisYTicks)
+    .tickFormat(axisYTickFormatter);
+
+  var axisYRight = d3.axisLeft(y)
+    .tickSizeInner(0)
+    .tickSizeOuter(0)
+    .tickPadding(axisPadding)
+    .ticks(axisYTicks)
+    .tickFormat(axisYTickFormatter);
 
   svg.append('g')
     .attr('class', 'axis axis-x')
     .attr('transform', 'translate(0,' + height + ')')
-    .call(d3.axisBottom(x).tickSizeInner(-height).tickSizeOuter(0).tickPadding(10).ticks(24));
+    .call(axisXBottom);
 
   svg.append('g')
     .attr('class', 'axis axis-y')
-    .call(d3.axisLeft(y).tickSizeInner(-width).tickSizeOuter(0).tickPadding(10));
+    .attr('transform', 'translate(0,0)')
+    .call(axisYLeft);
+
+  svg.append('g')
+    .attr('class', 'axis axis-x')
+    .attr('transform', 'translate(0,0)')
+    .call(axisXTop);
+
+  svg.append('g')
+    .attr('class', 'axis axis-y')
+    .attr('transform', 'translate(' + width +',0)')
+    .call(axisYRight);
 
   series.forEach(function(s, idx) {
     svg.append('path')
       .datum(s[plotType])
       .attr('class', 'line line-analysis line-' + idx)
-      .attr('d', line);
-
-    svg.append('path')
-      .datum(s.original)
-      .attr('class', 'line line-original line-' + idx)
       .attr('d', line);
   });
 };
@@ -205,7 +254,7 @@ var drawResults = function(opts) {
   for (var idx = 0; idx < numCols; idx++) {
     var seriesIdx = Math.floor((idx - 1) / plots.length);
     var plotIdx = (idx - 1) % plots.length;
-    headers.push(idx === 0 ? 't' : (plots[plotIdx] + '.' + seriesIdx));
+    headers.push(idx === 0 ? '' : (plots[plotIdx] + '.' + seriesIdx));
   }
   html += buildTableRow(headers, true);
 
@@ -217,6 +266,9 @@ var drawResults = function(opts) {
   table.innerHTML = html;
 };
 
+var getSelectValue = function(select) {
+  return select.options[select.selectedIndex].value;
+};
 
 var render = function(dataElement) {
   var series = [];
@@ -225,7 +277,7 @@ var render = function(dataElement) {
     .map(function(v) { return parseInt(v, 10); });
 
   valueIdxs.forEach(function(valueIdx) {
-    var data = parse({
+    var data = parseData({
       raw: document.querySelector('#data').value,
       timeFmt: document.querySelector('#time-fmt').value,
       idxs: {
@@ -236,19 +288,25 @@ var render = function(dataElement) {
 
     var dataFilled = computeFilledData({
       data: data,
-      fillMode: document.querySelector('#fill-mode').options[document.querySelector('#fill-mode').selectedIndex].value,
-      interval: d3[document.querySelector('#interval').options[document.querySelector('#interval').selectedIndex].value]
+      fillMode: getSelectValue(document.querySelector('#fill-mode')),
+      interval: d3[getSelectValue(document.querySelector('#interval'))]
     });
 
     var dataAnalyzed = computeAnalyzedData({
       data: dataFilled,
       analysis: {
-        type: document.querySelector('#analysis').options[document.querySelector('#analysis').selectedIndex].value,
-        opts: { windowSize: parseInt(document.querySelector('#window-size').value, 10) }
+        type: getSelectValue(document.querySelector('#analysis')),
+        opts: {
+          windowSize: parseInt(document.querySelector('#window-size').value, 10)
+        }
       }
     });
 
-    series.push({ original: data, filled: dataFilled, analyzed: dataAnalyzed });
+    series.push({
+      original: data,
+      filled: dataFilled,
+      analyzed: dataAnalyzed
+    });
   });
 
   drawResults({
@@ -259,16 +317,14 @@ var render = function(dataElement) {
   drawChart({
     series: series,
     artboard: document.querySelector('.artboard'),
+    plotType: getSelectValue(document.querySelector('#plot-type')),
     yExtent: document.querySelector('#extent-y').value.split(',').map(function(v) {
-      if (v === 'auto') {
-        return v;
-      } else {
-        return parseFloat(v);
-      }
+      return v === 'auto' ? v : parseFloat(v);
     })
   });
 };
 
 document.getElementById('render').addEventListener('click', function() {
   render();
+  document.querySelector('.pane-left').classList.remove('is-initial');
 });

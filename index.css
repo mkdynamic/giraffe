@@ -1,0 +1,98 @@
+html {
+  height: 100%;
+}
+
+body {
+  padding: 0;
+  margin: 0;
+  min-height: 100%;
+}
+
+* {
+  font-family: Input Sans Condensed;
+  font-size: 10px;
+}
+
+.artboard {
+  box-sizing: border-box;
+  width: 1280px;
+  height: 600px;
+  padding: 25px 25px 50px 50px;
+}
+
+.results {
+  margin: 10px;
+  border-collapse: collapse;
+}
+
+.results td,
+.results th {
+  border: 1px solid #ccc;
+  padding: 0 5px;
+}
+
+.results td {
+  text-align: right;
+}
+
+.config {
+  box-sizing: border-box;
+  margin: 10px;
+  overflow: hidden;
+}
+
+.config div {
+  float: left;
+  margin-left: 10px;
+}
+
+.config div:first-child {
+  margin-left: 0;
+}
+
+.config label {
+  display: block;
+}
+
+.artboard svg {
+  overflow: visible;
+}
+
+.tick line {
+  opacity: 0.15;
+}
+
+.line {
+  fill: none;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.line-analysis {
+  stroke-width: 4px;
+}
+
+.line-original {
+  stroke-width: 2px;
+  opacity: 0.05;
+}
+
+.line-0 {
+  stroke: #f00;
+}
+
+.line-1 {
+  stroke: #00f;
+}
+
+.line-2 {
+  stroke: #0f0;
+}
+
+.line-3 {
+  stroke: #ff0;
+}
+
+.line-4 {
+  stroke: #0ff;
+}

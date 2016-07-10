@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Giraffe</title>
+  <meta charset="utf-8" />
+  <link rel="stylesheet" href="index.css" />
+</head>
+<body>
+  <div class="artboard"></div>
+  <div class="config">
+    <div>
+      <label>Data (space seperated, no headers)</label>
+      <textarea id="data" rows="4" cols="40"></textarea>
+    </div>
+    <div>
+      <label>Time format</label>
+      <input type="text" id="time-fmt" value="%Y-%m-%d" />
+    </div>
+    <div>
+      <label>Time index</label>
+      <input type="text" id="idx-time" value="0" />
+    </div>
+    <div>
+      <label>Value indexes</label>
+      <input type="text" id="idx-values" value="4,5,6" />
+    </div>
+    <div>
+      <label>Window</label>
+      <input type="text" id="window-size" value="90" />
+    </div>
+    <div>
+      <label>Interval</label>
+      <select id="interval">
+        <option value="timeYear">Year</option>
+        <option value="timeMonth">Month</option>
+        <option value="timeWeek">Week</option>
+        <option value="timeDay" selected>Day</option>
+      </select>
+    </div>
+    <div>
+      <label>Missing points</label>
+      <select id="fill-mode">
+        <option value="last-non-blank-or-zero" selected>Use last present value or 0</option>
+        <option value="zero">Fill with 0</option>
+        <option value="omit">Omit value</option>
+      </select>
+    </div>
+    <div>
+      <label>Y-extent</label>
+      <input type="text" id="extent-y" value="0,100" />
+    </div>
+    <div>
+      <label>Analysis</label>
+      <select id="analysis">
+        <option value="sma" selected>SMA</option>
+        <option value="ema">EMA</option>
+      </select>
+    </div>
+    <div>
+      <button id="render">Render</button>
+    </div>
+  </div>
+  <table class="results"></table>
+  <script src="vendor/d3.js"></script>
+  <script src="index.js"></script>
+</body>
+</html>

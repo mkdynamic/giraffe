@@ -100,6 +100,79 @@ var computeAnalyzedData = function(opts) {
   return analyze(analyzers[analysis.type], analysis.opts, data);
 };
 
+var configuration = (function() {
+  var defaults = {
+    raw: '2000-01-01 5\n2000-01-02 4\n2000-01-03 3\n2000-01-04 6\n2000-01-05 2\n2000-01-06 3\n2000-01-07 6',
+    timeIdx: 0,
+    timeFmt: '%Y-%m-%d',
+    valueIdxs: [1],
+    analysisType: 'sma',
+    windowSize: 3,
+    interval: 'timeDay',
+    fillMode: 'last-non-blank-or-zero',
+    plotType: 'original',
+    yExtent: 'auto,auto'
+  };
+
+  var get = function() {
+    var config = {};
+
+    config.raw = document.querySelector('#data').value;
+    config.timeIdx = parseInt(document.querySelector('#idx-time').value, 10);
+    config.timeFmt = document.querySelector('#time-fmt').value;
+    config.valueIdxs = document.querySelector('#idx-values').value
+      .split(',')
+      .map(function(v) { return parseInt(v, 10); });
+    config.analysisType = document.querySelector('#analysis').value;
+    config.windowSize = parseInt(document.querySelector('#window-size').value, 10);
+    config.interval = document.querySelector('#interval').value;
+    config.fillMode = document.querySelector('#fill-mode').value;
+    config.plotType = document.querySelector('#plot-type').value;
+    config.yExtent = document.querySelector('#extent-y').value
+      .split(',')
+      .map(function(v) { return v === 'auto' ? v : parseFloat(v); });
+
+    return config;
+  };
+
+  var set = function(config) {
+    document.querySelector('#data').value = config.raw;
+    document.querySelector('#idx-time').value = config.timeIdx;
+    document.querySelector('#time-fmt').value = config.timeFmt;
+    document.querySelector('#idx-values').value = config.valueIdxs.join(',');
+    document.querySelector('#analysis').value = config.analysisType;
+    document.querySelector('#window-size').value = config.windowSize;
+    document.querySelector('#interval').value = config.interval;
+    document.querySelector('#fill-mode').value = config.fillMode;
+    document.querySelector('#plot-type').value = config.plotType;
+    document.querySelector('#extent-y').value = config.yExtent.join(',');
+  };
+
+  var save = function() {
+    var config = get();
+    var configSerialized = JSON.stringify(config);
+
+    window.localStorage.setItem('config', configSerialized);
+  };
+
+  var load = function() {
+    var configSerialized = window.localStorage.getItem('config');
+    if (!configSerialized) return false;
+    var config = JSON.parse(configSerialized);
+
+    set(config);
+    return true;
+  };
+
+  return {
+    defaults: defaults,
+    get: get,
+    set: set,
+    save: save,
+    load: load
+  };
+})();
+
 var drawChart = function(opts) {
   // reset
   document.querySelectorAll('.artboard svg').forEach(function(el) { el.remove(); });
@@ -148,8 +221,8 @@ var drawChart = function(opts) {
     return idx === 0 || idx === ticks.length - 1 ? '' : y.tickFormat().apply(y, arguments);
   };
 
-  var axisYTicks = Math.floor(height / 50); // give at least 50px height per tick
-  var axisXTicks = Math.floor(width / 75); // give at least 100px width per tick
+  var axisYTicks = Math.floor(height / 25); // give at least 25px height per tick
+  var axisXTicks = Math.floor(width / 75); // give at least 75px width per tick
   var axisPadding = 10;
 
   var axisXBottom = d3.axisTop(x)
@@ -266,48 +339,27 @@ var drawResults = function(opts) {
   table.innerHTML = html;
 };
 
-var getSelectValue = function(select) {
-  return select.options[select.selectedIndex].value;
-};
-
-var render = function(dataElement) {
-  var series = [];
-
-  var valueIdxs = document.querySelector('#idx-values').value.split(',')
-    .map(function(v) { return parseInt(v, 10); });
-
-  valueIdxs.forEach(function(valueIdx) {
+var render = function(config) {
+  var series = config.valueIdxs.reduce(function(m, valueIdx) {
     var data = parseData({
-      raw: document.querySelector('#data').value,
-      timeFmt: document.querySelector('#time-fmt').value,
-      idxs: {
-        time: parseInt(document.querySelector('#idx-time').value, 10),
-        value: valueIdx
-      }
+      raw: config.raw,
+      timeFmt: config.timeFmt,
+      idxs: { time: config.timeIdx, value: valueIdx }
     });
 
     var dataFilled = computeFilledData({
       data: data,
-      fillMode: getSelectValue(document.querySelector('#fill-mode')),
-      interval: d3[getSelectValue(document.querySelector('#interval'))]
+      fillMode: config.fillMode,
+      interval: d3[config.interval]
     });
 
     var dataAnalyzed = computeAnalyzedData({
       data: dataFilled,
-      analysis: {
-        type: getSelectValue(document.querySelector('#analysis')),
-        opts: {
-          windowSize: parseInt(document.querySelector('#window-size').value, 10)
-        }
-      }
+      analysis: { type: config.analysisType, opts: { windowSize: config.windowSize } }
     });
 
-    series.push({
-      original: data,
-      filled: dataFilled,
-      analyzed: dataAnalyzed
-    });
-  });
+    return m.concat({ original: data, filled: dataFilled, analyzed: dataAnalyzed });
+  }, []);
 
   drawResults({
     series: series,
@@ -317,14 +369,25 @@ var render = function(dataElement) {
   drawChart({
     series: series,
     artboard: document.querySelector('.artboard'),
-    plotType: getSelectValue(document.querySelector('#plot-type')),
-    yExtent: document.querySelector('#extent-y').value.split(',').map(function(v) {
-      return v === 'auto' ? v : parseFloat(v);
-    })
+    plotType: config.plotType,
+    yExtent: config.yExtent
   });
 };
 
 document.getElementById('render').addEventListener('click', function() {
-  render();
+  render(configuration.get());
+  configuration.save();
   document.querySelector('.pane-left').classList.remove('is-initial');
 });
+
+var init = function() {
+  if (configuration.load()) {
+    render(configuration.get());
+  } else {
+    configuration.set(configuration.defaults());
+  }
+
+  document.querySelector('.pane-left').classList.add('is-initial');
+};
+
+init();

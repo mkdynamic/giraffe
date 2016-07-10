@@ -8,54 +8,48 @@
 </head>
 <body>
   <div class="panes">
-    <div class="pane pane-left is-initial">
+    <div class="pane pane-left">
       <div class="config">
         <div class="config-group">
           <label>Data (CSV/TSV)</label>
-          <textarea id="data">2000-01-01 5
-2000-01-02 4
-2000-01-03 3
-2000-01-04 6
-2000-01-05 2
-2000-01-06 3
-2000-01-07 6</textarea>
+          <textarea id="data"></textarea>
         </div>
         <div class="config-group">
           <label>Time column index</label>
-          <input type="text" id="idx-time" value="0" />
+          <input type="text" id="idx-time" />
         </div>
         <div class="config-group">
           <label>Time column format</label>
-          <input type="text" id="time-fmt" value="%Y-%m-%d" />
+          <input type="text" id="time-fmt" />
         </div>
         <div class="config-group">
           <label>Value column indexes (CSV)</label>
-          <input type="text" id="idx-values" value="1" />
+          <input type="text" id="idx-values" />
         </div>
         <div class="config-group">
           <label>Analysis type</label>
           <select id="analysis">
-            <option value="sma" selected>SMA</option>
+            <option value="sma">SMA</option>
             <option value="ema">EMA</option>
           </select>
         </div>
         <div class="config-group">
           <label>Analysis window</label>
-          <input type="text" id="window-size" value="3" />
+          <input type="text" id="window-size" />
         </div>
         <div class="config-group">
           <label>Interval</label>
           <select id="interval">
-            <option value="timeYear">Year</option>
-            <option value="timeMonth">Month</option>
+            <option value="timeDay">Day</option>
             <option value="timeWeek">Week</option>
-            <option value="timeDay" selected>Day</option>
+            <option value="timeMonth">Month</option>
+            <option value="timeYear">Year</option>
           </select>
         </div>
         <div class="config-group">
           <label>Missing points</label>
           <select id="fill-mode">
-            <option value="last-non-blank-or-zero" selected>Use last non-blank value or zero</option>
+            <option value="last-non-blank-or-zero">Use last non-blank value or zero</option>
             <option value="zero">Fill with zero</option>
             <option value="omit">Omit value</option>
           </select>
@@ -64,13 +58,13 @@
           <label>Plot type</label>
           <select id="plot-type">
             <option value="original">Original</option>
-            <option value="analyzed" selected>Analyzed</option>
+            <option value="analyzed">Analyzed</option>
             <option value="filled">Filled</option>
           </select>
         </div>
         <div class="config-group">
           <label>Y-extent (min,max)</label>
-          <input type="text" id="extent-y" value="auto,auto" />
+          <input type="text" id="extent-y" />
         </div>
         <div class="config-group">
           <button id="render">Render</button>

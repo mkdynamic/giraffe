@@ -6,18 +6,20 @@ html {
   --color-red: #f00;
   --color-green: #0f0;
   --color-blue: #00f;
+  --font-stack-normal: Input Mono Narrow;
+  --font-stack-condensed: Input Mono Compressed;
 }
 
 * {
   box-sizing: border-box;
-  font-family: Input Mono Narrow;
   font-size: var(--base-font-size);
   line-height: var(--base-line-height);
+  font-family: var(--font-stack-normal);
 }
 
 svg *,
 #data {
-  font-family: Input Mono Compressed;
+  font-family: var(--font-stack-condensed);
 }
 
 .panes {

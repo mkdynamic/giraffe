@@ -115,11 +115,11 @@ svg *,
 }
 
 .artboard .axis .domain {
-  stroke: var(--color-gray-light);
+  stroke: #000;
 }
 
 .artboard .tick line {
-  stroke: var(--color-gray-light);
+  stroke: rgba(0, 0, 0, 0.1);
 }
 
 .artboard .tick text {
@@ -134,7 +134,7 @@ svg *,
 }
 
 .artboard .line-analysis {
-  stroke-width: 4px;
+  stroke-width: 3px;
 }
 
 .artboard .line-0 {

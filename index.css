@@ -29,19 +29,21 @@ svg *,
 
 .pane-left {
   width: 400px;
-  background: rgba(245, 245, 245, 0.95);
+  background: rgba(245, 245, 245, 0.98);
   position: fixed;
   top: 0;
   bottom: 0;
   left: 0;
   overflow: auto;
   transform: translateX(-399px);
-  transition: transform 0.25s ease-in-out 0s;
+  transition: all 0.25s ease-in-out 0s;
+  box-shadow: none;
 }
 
 .pane-left:hover,
 .pane-left.is-initial {
   transform: translateX(0);
+  box-shadow: rgba(0, 0, 0, 0.5) 5px 0 30px -10px;
 }
 
 .pane-right {

@@ -300,14 +300,15 @@ var drawChart = function(opts) {
     default:
       yExtentAuto = d3.extent(allData, function(d) { return d.v; });
   }
-  var yExtent = [
-    opts.yExtent[0] === 'auto' ? yExtentAuto[0] : opts.yExtent[0],
-    opts.yExtent[1] === 'auto' ? yExtentAuto[1] : opts.yExtent[1]
-  ];
 
   if (plotType === 'buckets' || plotType === 'combined') {
     yExtentAuto[0] = Math.min(0, yExtentAuto[0]);
   }
+
+  var yExtent = [
+    opts.yExtent[0] === 'auto' ? yExtentAuto[0] : opts.yExtent[0],
+    opts.yExtent[1] === 'auto' ? yExtentAuto[1] : opts.yExtent[1]
+  ];
 
   var x = d3.scaleTime()
     .range([0, width])

@@ -125,7 +125,7 @@ var configuration = (function() {
     agg: 'sum',
     fillMode: 'last-non-blank-or-zero',
     plotType: 'combined',
-    yExtent: 'auto,auto'
+    yExtent: ['auto', 'auto']
   };
 
   var get = function() {

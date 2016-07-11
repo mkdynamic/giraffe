@@ -305,6 +305,10 @@ var drawChart = function(opts) {
     opts.yExtent[1] === 'auto' ? yExtentAuto[1] : opts.yExtent[1]
   ];
 
+  if (plotType === 'buckets' || plotType === 'combined') {
+    yExtentAuto[0] = Math.min(0, yExtentAuto[0]);
+  }
+
   var x = d3.scaleTime()
     .range([0, width])
     .domain(d3.extent(tDomainFilled));

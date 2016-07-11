@@ -6,8 +6,8 @@ html {
   --color-red: #f00;
   --color-green: #0f0;
   --color-blue: #00f;
-  --font-stack-normal: Input Mono Narrow;
-  --font-stack-condensed: Input Mono Compressed;
+  --font-stack-normal: Input Mono Narrow, Arial Narrow, sans-serif;
+  --font-stack-condensed: Input Mono Compressed, Arial Narrow, sans-serif;
 }
 
 * {

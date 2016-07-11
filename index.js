@@ -497,7 +497,7 @@ var init = function() {
   if (configuration.load()) {
     render(configuration.get());
   } else {
-    configuration.set(configuration.defaults());
+    configuration.set(configuration.defaults);
   }
 
   // document.querySelector('.pane-left').classList.add('is-initial');

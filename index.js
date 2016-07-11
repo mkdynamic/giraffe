@@ -124,7 +124,7 @@ var configuration = (function() {
     interval: 'timeDay',
     agg: 'sum',
     fillMode: 'last-non-blank-or-zero',
-    plotType: 'original',
+    plotType: 'combined',
     yExtent: 'auto,auto'
   };
 
@@ -256,6 +256,7 @@ var drawChart = function(opts) {
   var plotType = opts.plotType;
   var series = opts.series;
   var artboard = opts.artboard;
+  var interval = opts.interval;
 
   var artboardStyle = getComputedStyle(artboard, null);
   var paddingH = parseFloat(artboardStyle.getPropertyValue('padding-left')) +
@@ -270,8 +271,35 @@ var drawChart = function(opts) {
       return mm.concat(s[plot]);
     }, []));
   }, []);
-  console.log(d3.extent(allData, function(d) { return d.t; }))
-  var yExtentAuto = d3.extent(allData, function(d) { return d.v; });
+
+  var allDataFilled = series.reduce(function(m, s) {
+    return m.concat(s.filled);
+  }, []);
+
+  var tDomainFilled = allDataFilled.map(function(d) { return d.t; });
+  tDomainFilled.push(interval.offset(d3.min(tDomainFilled), -1));
+  tDomainFilled.push(interval.offset(d3.max(tDomainFilled), 1));
+
+  var yExtentAuto;
+  switch (plotType) {
+    case 'scatter':
+      yExtentAuto = d3.extent(series.reduce(function(m, s) {
+        return m.concat(s.original);
+      }, []), function(d) { return d.v; });
+      break;
+    case 'analyzed':
+      yExtentAuto = d3.extent(series.reduce(function(m, s) {
+        return m.concat(s.analyzed);
+      }, []), function(d) { return d.v; });
+      break;
+    case 'buckets':
+      yExtentAuto = d3.extent(series.reduce(function(m, s) {
+        return m.concat(s.filled);
+      }, []), function(d) { return d.v; });
+      break;
+    default:
+      yExtentAuto = d3.extent(allData, function(d) { return d.v; });
+  }
   var yExtent = [
     opts.yExtent[0] === 'auto' ? yExtentAuto[0] : opts.yExtent[0],
     opts.yExtent[1] === 'auto' ? yExtentAuto[1] : opts.yExtent[1]
@@ -279,7 +307,20 @@ var drawChart = function(opts) {
 
   var x = d3.scaleTime()
     .range([0, width])
-    .domain(d3.extent(allData, function(d) { return d.t; }));
+    .domain(d3.extent(tDomainFilled));
+
+  var xFilled0 = d3.scalePoint()
+    .range([0, width])
+    .domain(interval.every(1).range(d3.min(tDomainFilled), interval.offset(d3.max(tDomainFilled), 1)))
+    .padding(0)
+    .align(0.5);
+
+  var xFilled1 = d3.scaleBand()
+    .range([0, xFilled0.step()])
+    .domain(series.map(function(_s, idx) { return idx; }))
+    .paddingOuter(0.1)
+    .paddingInner(0)
+    .align(0.5);
 
   var y = d3.scaleLinear()
     .range([height, 0])
@@ -291,6 +332,7 @@ var drawChart = function(opts) {
 
   var svg = d3.select(artboard)
     .append('svg')
+    .attr('class', 'plot plot-' + plotType)
     .attr('width', width)
     .attr('height', height);
 
@@ -302,8 +344,8 @@ var drawChart = function(opts) {
     return idx === 0 || idx === ticks.length - 1 ? '' : y.tickFormat().apply(y, arguments);
   };
 
-  var axisYTicks = Math.floor(height / 25); // give at least 25px height per tick
-  var axisXTicks = Math.floor(width / 75); // give at least 75px width per tick
+  var axisYTicks = Math.floor(height / 30); // give at least 25px height per tick
+  var axisXTicks = Math.floor(width / 60); // give at least 75px width per tick
   var axisPadding = 10;
 
   var axisXBottom = d3.axisTop(x)
@@ -334,6 +376,53 @@ var drawChart = function(opts) {
     .ticks(axisYTicks)
     .tickFormat(axisYTickFormatter);
 
+  var dataOriginal = series.reduce(function(m, s, idx) {
+    return m.concat(
+      s.original
+        .filter(function(d) { return typeof d.v !== 'undefined'; })
+        .map(function(d) { return Object.assign({ idx: idx }, d); })
+    );
+  }, []);
+
+  svg.selectAll('.point')
+    .data(dataOriginal)
+    .enter()
+    .append('path')
+    .attr('class', function(d) { return 'point point-' + d.idx; })
+    .attr('d', d3.symbol().type(d3.symbolCross).size(6))
+    .attr('transform', function(d) { return 'translate(' + x(d.t) + ',' + y(d.v) + ')'; })
+
+  var dataFilled = series.reduce(function(m, s, idx) {
+    return m.concat(
+      s.filled
+        .filter(function(d) { return typeof d.v !== 'undefined'; })
+        .map(function(d) { return Object.assign({ idx: idx }, d); })
+    );
+  }, []);
+
+  svg.selectAll('.box')
+    .data(dataFilled)
+    .enter()
+    .append('rect')
+    .attr('class', function(d) { return 'box box-' + d.idx; })
+    .attr('x', function(d) {
+      return Math.abs(xFilled1(d.idx)) +
+        Math.abs(xFilled0(d.t)) -
+        Math.abs(xFilled0.step() / 2);
+    })
+    .attr('y', function(d) { return y(d.v); })
+    .attr('width', xFilled1.bandwidth())
+    .attr('height', function(d) { return y(0) - y(d.v); });
+
+  series.forEach(function(s, idx) {
+    var dataAnalyzed = s.analyzed.filter(function(d) { return typeof d.v !== 'undefined'; });
+
+    svg.append('path')
+      .datum(dataAnalyzed)
+      .attr('class', 'line line-' + idx)
+      .attr('d', line);
+  });
+
   svg.append('g')
     .attr('class', 'axis axis-x')
     .attr('transform', 'translate(0,' + height + ')')
@@ -353,14 +442,6 @@ var drawChart = function(opts) {
     .attr('class', 'axis axis-y')
     .attr('transform', 'translate(' + width +',0)')
     .call(axisYRight);
-
-  series.forEach(function(s, idx) {
-    var data = s[plotType].filter(function(d) { return typeof d.v !== 'undefined'; });
-    svg.append('path')
-      .datum(data)
-      .attr('class', 'line line-analysis line-' + idx)
-      .attr('d', line);
-  });
 };
 
 var render = function(config) {
@@ -401,7 +482,8 @@ var render = function(config) {
     series: series,
     artboard: document.querySelector('.artboard'),
     yExtent: config.yExtent,
-    plotType: config.plotType
+    plotType: config.plotType,
+    interval: d3[config.interval]
   });
 };
 
@@ -418,7 +500,7 @@ var init = function() {
     configuration.set(configuration.defaults());
   }
 
-  document.querySelector('.pane-left').classList.add('is-initial');
+  // document.querySelector('.pane-left').classList.add('is-initial');
 };
 
 init();

@@ -27,7 +27,7 @@
           <input type="text" id="idx-values" />
         </div>
         <div class="config-group">
-          <label>Bucket interval</label>
+          <label>Data &rarr; Buckets (interval)</label>
           <select id="interval">
             <option value="timeDay">Day</option>
             <option value="timeWeek">Week</option>
@@ -36,14 +36,14 @@
           </select>
         </div>
         <div class="config-group">
-          <label>Bucket aggregation</label>
+          <label>Data &rarr; Buckets (aggregation)</label>
           <select id="agg">
             <option value="sum">Sum</option>
             <option value="mean">Mean</option>
           </select>
         </div>
         <div class="config-group">
-          <label>Bucket missing points handling</label>
+          <label>Data &rarr; Buckets (missing points)</label>
           <select id="fill-mode">
             <option value="last-non-blank-or-zero">Use last non-blank value or zero</option>
             <option value="zero">Fill with zero</option>
@@ -51,22 +51,23 @@
           </select>
         </div>
         <div class="config-group">
-          <label>Analysis type</label>
+          <label>Data &rarr; Buckets &rarr; Analysis (type)</label>
           <select id="analysis">
             <option value="sma">SMA</option>
             <option value="ema">EMA</option>
           </select>
         </div>
         <div class="config-group">
-          <label>Analysis window</label>
+          <label>Data &rarr; Buckets &rarr; Analysis (window)</label>
           <input type="text" id="window-size" />
         </div>
         <div class="config-group">
           <label>Plot type</label>
           <select id="plot-type">
-            <option value="original">Data</option>
-            <option value="filled">Bucket</option>
-            <option value="analyzed">Analysis</option>
+            <option value="scatter">Data (scatter)</option>
+            <option value="buckets">Buckets (bar)</option>
+            <option value="analyzed">Analyzed (line)</option>
+            <option value="combined">Combined (scatter + bar + line)</option>
           </select>
         </div>
         <div class="config-group">

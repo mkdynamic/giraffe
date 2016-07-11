@@ -118,27 +118,67 @@ svg *,
   overflow: visible;
 }
 
+.artboard .plot-combined .line {
+  opacity: 0.75;
+}
+
+.artboard .plot-combined .box {
+  opacity: 0.1;
+}
+
+.artboard .plot-combined .point {
+  opacity: 0.5;
+}
+
+.artboard .plot-analyzed .line {
+  opacity: 0.75;
+}
+
+.artboard .plot-buckets .box {
+  opacity: 0.75;
+}
+
+.artboard .plot-scatter .point {
+  opacity: 0.75;
+}
+
 .artboard .axis .domain {
   stroke: #000;
 }
 
 .artboard .tick line {
-  stroke: rgba(0, 0, 0, 0.1);
+  stroke: rgba(0, 0, 0, 0.05);
 }
 
 .artboard .tick text {
-  text-shadow: 0 0 1px #fff, 0 0 2px #fff, 0 0 4px #fff, 0 0 8px #fff, 0 0 16px #fff;
+  text-shadow: 0px 1px 0px #fff,
+    0px -1px 0px #fff,
+    0px 2px 0px #fff,
+    0px -2px 0px #fff,
+    1px 0px 0px #fff,
+    1px -1px 0px #fff,
+    1px 2px 0px #fff,
+    1px -2px 0px #fff,
+    -1px 0px 0px #fff,
+    -1px 1px 0px #fff,
+    -1px 2px 0px #fff,
+    -1px -2px 0px #fff,
+    2px 0px 0px #fff,
+    2px 1px 0px #fff,
+    2px -1px 0px #fff,
+    2px -2px 0px #fff,
+    -2px 0px 0px #fff,
+    -2px 1px 0px #fff,
+    -2px -1px 0px #fff,
+    -2px 2px 0px #fff;
 }
 
 .artboard .line {
   fill: none;
   stroke-linecap: round;
   stroke-linejoin: round;
-  opacity: 0.75;
-}
-
-.artboard .line-analysis {
   stroke-width: 3px;
+  opacity: 0;
 }
 
 .artboard .line-0 {
@@ -151,4 +191,36 @@ svg *,
 
 .artboard .line-2 {
   stroke: var(--color-green);
+}
+
+.artboard .box {
+  opacity: 0;
+}
+
+.artboard .box-0 {
+  fill: var(--color-blue);
+}
+
+.artboard .box-1 {
+  fill: var(--color-red);
+}
+
+.artboard .box-2 {
+  fill: var(--color-green);
+}
+
+.artboard .point {
+  opacity: 0;
+}
+
+.artboard .point-0 {
+  fill: var(--color-blue);
+}
+
+.artboard .point-1 {
+  fill: var(--color-red);
+}
+
+.artboard .point-2 {
+  fill: var(--color-green);
 }

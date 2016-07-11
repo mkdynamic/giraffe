@@ -15,16 +15,40 @@
           <textarea id="data"></textarea>
         </div>
         <div class="config-group">
-          <label>Time column index</label>
-          <input type="text" id="idx-time" />
-        </div>
-        <div class="config-group">
-          <label>Time column format</label>
+          <label>Data time format</label>
           <input type="text" id="time-fmt" />
         </div>
         <div class="config-group">
-          <label>Value column indexes (CSV)</label>
+          <label>Data time index</label>
+          <input type="text" id="idx-time" />
+        </div>
+        <div class="config-group">
+          <label>Data value indexes (CSV)</label>
           <input type="text" id="idx-values" />
+        </div>
+        <div class="config-group">
+          <label>Bucket interval</label>
+          <select id="interval">
+            <option value="timeDay">Day</option>
+            <option value="timeWeek">Week</option>
+            <option value="timeMonth">Month</option>
+            <option value="timeYear">Year</option>
+          </select>
+        </div>
+        <div class="config-group">
+          <label>Bucket aggregation</label>
+          <select id="agg">
+            <option value="sum">Sum</option>
+            <option value="mean">Mean</option>
+          </select>
+        </div>
+        <div class="config-group">
+          <label>Bucket missing points handling</label>
+          <select id="fill-mode">
+            <option value="last-non-blank-or-zero">Use last non-blank value or zero</option>
+            <option value="zero">Fill with zero</option>
+            <option value="omit">Omit value</option>
+          </select>
         </div>
         <div class="config-group">
           <label>Analysis type</label>
@@ -38,28 +62,11 @@
           <input type="text" id="window-size" />
         </div>
         <div class="config-group">
-          <label>Interval</label>
-          <select id="interval">
-            <option value="timeDay">Day</option>
-            <option value="timeWeek">Week</option>
-            <option value="timeMonth">Month</option>
-            <option value="timeYear">Year</option>
-          </select>
-        </div>
-        <div class="config-group">
-          <label>Missing points</label>
-          <select id="fill-mode">
-            <option value="last-non-blank-or-zero">Use last non-blank value or zero</option>
-            <option value="zero">Fill with zero</option>
-            <option value="omit">Omit value</option>
-          </select>
-        </div>
-        <div class="config-group">
           <label>Plot type</label>
           <select id="plot-type">
-            <option value="original">Original</option>
-            <option value="analyzed">Analyzed</option>
-            <option value="filled">Filled</option>
+            <option value="original">Data</option>
+            <option value="filled">Bucket</option>
+            <option value="analyzed">Analysis</option>
           </select>
         </div>
         <div class="config-group">

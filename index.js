@@ -1,3 +1,5 @@
+var plots = ['original', 'filled', 'analyzed'];
+
 // data must be rows of (TIME_FMT VALUE), gaps allowed, unsorted
 var parseData = function(opts) {
   var raw = opts.raw;
@@ -19,21 +21,32 @@ var computeFilledData = function(opts) {
   var data = opts.data;
   var fillMode = opts.fillMode;
   var tInterval = opts.interval;
+  var agg = opts.agg;
 
   var tData = data.map(function(d) { return d.t; });
-  var tMin = d3.min(tData);
-  var tMax = d3.max(tData);
+  var tMin = tInterval.floor(d3.min(tData));
+  var tMax = tInterval.ceil(d3.max(tData));
   var tStep = tInterval.every(1);
-  var tRange = tStep.range(tMin, tInterval.offset(tMax, 1));
+  var tRange = tStep.range(tMin, tMax);
 
-  var dataByTs = data.reduce(function(m, d) {
-    m[d.t.getTime()] = d;
+  var vsByTs = data.reduce(function(m, d) {
+    var tFloor = tInterval.floor(d.t);
+    var ts = tFloor.getTime();
+
+    m[ts] = m[ts] || [];
+    m[ts].push(d.v);
+
     return m;
   }, {});
 
+  var aggregateVs = {
+    sum: d3.sum,
+    mean: d3.mean
+  }[agg];
+
   return tRange.reduce(function(m, t) {
-    var d = dataByTs[t.getTime()];
-    if (d) return m.concat(d);
+    var vs = vsByTs[t.getTime()];
+    if (vs) return m.concat({ t: t, v: aggregateVs(vs) });
 
     switch (fillMode) {
       case 'zero':
@@ -72,7 +85,7 @@ var computeAnalyzedData = function(opts) {
       },
       prepareInput: function(opts, data, idx) {
         return data
-          .slice(0, idx + 1)
+          .slice(Math.max(0, idx + 1 - opts.windowSize), idx + 1)
           .map(function(d) { return d.v; })
           .reverse();
       },
@@ -109,6 +122,7 @@ var configuration = (function() {
     analysisType: 'sma',
     windowSize: 3,
     interval: 'timeDay',
+    agg: 'sum',
     fillMode: 'last-non-blank-or-zero',
     plotType: 'original',
     yExtent: 'auto,auto'
@@ -126,6 +140,7 @@ var configuration = (function() {
     config.analysisType = document.querySelector('#analysis').value;
     config.windowSize = parseInt(document.querySelector('#window-size').value, 10);
     config.interval = document.querySelector('#interval').value;
+    config.agg = document.querySelector('#agg').value;
     config.fillMode = document.querySelector('#fill-mode').value;
     config.plotType = document.querySelector('#plot-type').value;
     config.yExtent = document.querySelector('#extent-y').value
@@ -135,7 +150,9 @@ var configuration = (function() {
     return config;
   };
 
-  var set = function(config) {
+  var set = function(_config) {
+    var config = Object.assign({}, defaults, _config);
+
     document.querySelector('#data').value = config.raw;
     document.querySelector('#idx-time').value = config.timeIdx;
     document.querySelector('#time-fmt').value = config.timeFmt;
@@ -143,6 +160,7 @@ var configuration = (function() {
     document.querySelector('#analysis').value = config.analysisType;
     document.querySelector('#window-size').value = config.windowSize;
     document.querySelector('#interval').value = config.interval;
+    document.querySelector('#agg').value = config.agg;
     document.querySelector('#fill-mode').value = config.fillMode;
     document.querySelector('#plot-type').value = config.plotType;
     document.querySelector('#extent-y').value = config.yExtent.join(',');
@@ -153,6 +171,7 @@ var configuration = (function() {
     var configSerialized = JSON.stringify(config);
 
     window.localStorage.setItem('config', configSerialized);
+    return config;
   };
 
   var load = function() {
@@ -173,6 +192,63 @@ var configuration = (function() {
   };
 })();
 
+var drawResults = function(opts) {
+  var series = opts.series;
+  var table = opts.table;
+
+  var numCols = 1 + series.length * plots.length; // date, series1.original, series1.filled, series1.analyzed, ...
+  var basisRange = series[0].filled; // assume all filled ranges the same
+  var rowsByTs = basisRange.reduce(function(m, d) {
+    var ts = d.t.getTime();
+    m[ts] = new Array(numCols);
+    m[ts][0] = d.t;
+    return m;
+  }, {}); // { ts1: [row_data], ... }
+
+  series.forEach(function(s, idx) {
+    for (var jdx = 0; jdx < plots.length; jdx++) {
+      var colIdx = 1 + (idx * 3) + jdx;
+      var plot = plots[jdx];
+      s[plot].forEach(function(d) { rowsByTs[d.t.getTime()][colIdx] = d.v; });
+    }
+  });
+
+  var buildTableRow = function(cells, isHeader) {
+    var buffer = '<tr>';
+    var cellType = isHeader ? 'th' : 'td';
+    for (var idx = 0; idx < cells.length; idx++) {
+      var v = '–';
+      if (typeof cells[idx] === 'number') {
+        v = cells[idx].toFixed(2);
+      } else if (typeof cells[idx] === 'object' && cells[idx].toISOString) {
+        v = cells[idx].toISOString();
+      } else if (typeof cells[idx] !== 'undefined') {
+        v = cells[idx].toString();
+      }
+      buffer += '<' + cellType + '>' + v + '</' + cellType + '>';
+    }
+    buffer += '</tr>';
+    return buffer;
+  };
+
+  var html = '';
+
+  var headers = [];
+  for (var idx = 0; idx < numCols; idx++) {
+    var seriesIdx = Math.floor((idx - 1) / plots.length);
+    var plotIdx = (idx - 1) % plots.length;
+    headers.push(idx === 0 ? '' : (plots[plotIdx] + '.' + seriesIdx));
+  }
+  html += buildTableRow(headers, true);
+
+  for (var ts in rowsByTs) {
+    var row = rowsByTs[ts];
+    html += buildTableRow(row);
+  }
+
+  table.innerHTML = html;
+};
+
 var drawChart = function(opts) {
   // reset
   document.querySelectorAll('.artboard svg').forEach(function(el) { el.remove(); });
@@ -189,7 +265,12 @@ var drawChart = function(opts) {
   var width = artboard.clientWidth - paddingH;
   var height = artboard.clientHeight - paddingV;
 
-  var allData = series.reduce(function(m, s) { return m.concat(s[plotType]); }, []);
+  var allData = series.reduce(function(m, s) {
+    return m.concat(plots.reduce(function(mm, plot) {
+      return mm.concat(s[plot]);
+    }, []));
+  }, []);
+  console.log(d3.extent(allData, function(d) { return d.t; }))
   var yExtentAuto = d3.extent(allData, function(d) { return d.v; });
   var yExtent = [
     opts.yExtent[0] === 'auto' ? yExtentAuto[0] : opts.yExtent[0],
@@ -274,109 +355,59 @@ var drawChart = function(opts) {
     .call(axisYRight);
 
   series.forEach(function(s, idx) {
+    var data = s[plotType].filter(function(d) { return typeof d.v !== 'undefined'; });
     svg.append('path')
-      .datum(s[plotType])
+      .datum(data)
       .attr('class', 'line line-analysis line-' + idx)
       .attr('d', line);
   });
 };
 
-var drawResults = function(opts) {
-  var series = opts.series;
-  var table = opts.table;
-
-  var plots = ['original', 'filled', 'analyzed'];
-  var numCols = 1 + series.length * plots.length; // date, series1.original, series1.filled, series1.analyzed, ...
-  var basisRange = series[0].filled; // assume all filled ranges the same
-  var rowsByTs = basisRange.reduce(function(m, d) {
-    var ts = d.t.getTime();
-    m[ts] = new Array(numCols);
-    m[ts][0] = d.t;
-    return m;
-  }, {}); // { ts1: [row_data], ... }
-
-  series.forEach(function(s, idx) {
-    for (var jdx = 0; jdx < plots.length; jdx++) {
-      var colIdx = 1 + (idx * 3) + jdx;
-      var plot = plots[jdx];
-      s[plot].forEach(function(d) { rowsByTs[d.t.getTime()][colIdx] = d.v; });
-    }
-  });
-
-  var buildTableRow = function(cells, isHeader) {
-    var buffer = '<tr>';
-    var cellType = isHeader ? 'th' : 'td';
-    for (var idx = 0; idx < cells.length; idx++) {
-      var v = '–';
-      if (typeof cells[idx] === 'number') {
-        v = cells[idx].toFixed(2);
-      } else if (typeof cells[idx] === 'object' && cells[idx].toISOString) {
-        v = cells[idx].toISOString();
-      } else if (typeof cells[idx] !== 'undefined') {
-        v = cells[idx].toString();
-      }
-      buffer += '<' + cellType + '>' + v + '</' + cellType + '>';
-    }
-    buffer += '</tr>';
-    return buffer;
-  };
-
-  var html = '';
-
-  var headers = [];
-  for (var idx = 0; idx < numCols; idx++) {
-    var seriesIdx = Math.floor((idx - 1) / plots.length);
-    var plotIdx = (idx - 1) % plots.length;
-    headers.push(idx === 0 ? '' : (plots[plotIdx] + '.' + seriesIdx));
-  }
-  html += buildTableRow(headers, true);
-
-  for (var ts in rowsByTs) {
-    var row = rowsByTs[ts];
-    html += buildTableRow(row);
-  }
-
-  table.innerHTML = html;
-};
-
 var render = function(config) {
-  var series = config.valueIdxs.reduce(function(m, valueIdx) {
+  var series = config.valueIdxs.reduce(function(m, valueIdx, seriesIdx) {
     var data = parseData({
       raw: config.raw,
       timeFmt: config.timeFmt,
       idxs: { time: config.timeIdx, value: valueIdx }
     });
 
+    // console.log('series', seriesIdx, 'data', data);
+
     var dataFilled = computeFilledData({
       data: data,
       fillMode: config.fillMode,
-      interval: d3[config.interval]
+      interval: d3[config.interval],
+      agg: config.agg
     });
+
+    // console.log('series', seriesIdx, 'dataFilled', dataFilled);
 
     var dataAnalyzed = computeAnalyzedData({
       data: dataFilled,
       analysis: { type: config.analysisType, opts: { windowSize: config.windowSize } }
     });
 
+    // console.log('series', seriesIdx, 'dataAnalyzed', dataAnalyzed);
+
     return m.concat({ original: data, filled: dataFilled, analyzed: dataAnalyzed });
   }, []);
 
-  drawResults({
-    series: series,
-    table: document.querySelector('.results')
-  });
+  // drawResults({
+  //   series: series,
+  //   table: document.querySelector('.results')
+  // });
 
   drawChart({
     series: series,
     artboard: document.querySelector('.artboard'),
-    plotType: config.plotType,
-    yExtent: config.yExtent
+    yExtent: config.yExtent,
+    plotType: config.plotType
   });
 };
 
 document.getElementById('render').addEventListener('click', function() {
-  render(configuration.get());
-  configuration.save();
+  var config = configuration.save();
+  render(config);
   document.querySelector('.pane-left').classList.remove('is-initial');
 });
 

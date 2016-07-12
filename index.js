@@ -115,11 +115,11 @@ var computeAnalyzedData = function(opts) {
 
 var configuration = (function() {
   var defaults = {
-    raw: '2000-01-01 5\n2000-01-02 4\n2000-01-03 3\n2000-01-04 6\n2000-01-05 2\n2000-01-06 3\n2000-01-07 6',
+    raw: '2000-01-01 2\n2000-01-01 2\n2000-01-02 5\n2000-01-03 3\n2000-01-04 6\n2000-01-05 2\n2000-01-06 3\n2000-01-07 6\n2000-01-09 3\n2000-01-10 3\n2000-01-10 1\n2000-01-11 2\n2000-01-12 4\n2000-01-13 5\n2000-01-14 1\n2000-01-14 2',
     timeIdx: 0,
     timeFmt: '%Y-%m-%d',
     valueIdxs: [1],
-    analysisType: 'sma',
+    analysisType: 'ema',
     windowSize: 3,
     interval: 'timeDay',
     agg: 'sum',
@@ -499,13 +499,11 @@ document.getElementById('render').addEventListener('click', function() {
 });
 
 var init = function() {
-  if (configuration.load()) {
-    render(configuration.get());
-  } else {
+  if (!configuration.load()) {
     configuration.set(configuration.defaults);
   }
 
-  // document.querySelector('.pane-left').classList.add('is-initial');
+  document.querySelector('.pane-left').classList.add('is-initial');
 };
 
 init();

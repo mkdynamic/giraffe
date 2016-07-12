@@ -195,8 +195,10 @@ var configuration = (function() {
 var drawResults = function(opts) {
   var series = opts.series;
   var table = opts.table;
+  var plotsIncluded = plots.slice(1);
+  var plotAliases = { filled: 'buckets' };
 
-  var numCols = 1 + series.length * plots.length; // date, series1.original, series1.filled, series1.analyzed, ...
+  var numCols = 1 + series.length * plotsIncluded.length; // date, series1.filled, series1.analyzed, ...
   var basisRange = series[0].filled; // assume all filled ranges the same
   var rowsByTs = basisRange.reduce(function(m, d) {
     var ts = d.t.getTime();
@@ -206,9 +208,9 @@ var drawResults = function(opts) {
   }, {}); // { ts1: [row_data], ... }
 
   series.forEach(function(s, idx) {
-    for (var jdx = 0; jdx < plots.length; jdx++) {
-      var colIdx = 1 + (idx * 3) + jdx;
-      var plot = plots[jdx];
+    for (var jdx = 0; jdx < plotsIncluded.length; jdx++) {
+      var colIdx = 1 + (idx * plotsIncluded.length) + jdx;
+      var plot = plotsIncluded[jdx];
       s[plot].forEach(function(d) { rowsByTs[d.t.getTime()][colIdx] = d.v; });
     }
   });
@@ -235,9 +237,11 @@ var drawResults = function(opts) {
 
   var headers = [];
   for (var idx = 0; idx < numCols; idx++) {
-    var seriesIdx = Math.floor((idx - 1) / plots.length);
-    var plotIdx = (idx - 1) % plots.length;
-    headers.push(idx === 0 ? '' : (plots[plotIdx] + '.' + seriesIdx));
+    var seriesIdx = Math.floor((idx - 1) / plotsIncluded.length);
+    var plotIdx = (idx - 1) % plotsIncluded.length;
+    var plotName = plotsIncluded[plotIdx];
+    plotName = plotAliases[plotName] || plotName;
+    headers.push(idx === 0 ? '' : (plotName + '.' + seriesIdx));
   }
   html += buildTableRow(headers, true);
 
@@ -478,10 +482,10 @@ var render = function(config) {
     return m.concat({ original: data, filled: dataFilled, analyzed: dataAnalyzed });
   }, []);
 
-  // drawResults({
-  //   series: series,
-  //   table: document.querySelector('.results')
-  // });
+  drawResults({
+    series: series,
+    table: document.querySelector('.results')
+  });
 
   drawChart({
     series: series,

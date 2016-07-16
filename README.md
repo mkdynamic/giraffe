@@ -2,7 +2,7 @@
 
 Quick plots for time series CSV/TSV data.
 
-![](screenshot.png)
+![](capture.png)
 
 ## License
 

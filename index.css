@@ -6,6 +6,7 @@ html {
   --color-red: #f00;
   --color-green: #0f0;
   --color-blue: #00f;
+  --color-purple: #80f;
   --font-stack-normal: Input Mono Narrow, Arial Narrow, sans-serif;
   --font-stack-condensed: Input Mono Compressed, Arial Narrow, sans-serif;
 }
@@ -193,6 +194,10 @@ svg *,
   stroke: var(--color-green);
 }
 
+.artboard .line-3 {
+  stroke: var(--color-purple);
+}
+
 .artboard .box {
   opacity: 0;
 }
@@ -209,6 +214,10 @@ svg *,
   fill: var(--color-green);
 }
 
+.artboard .box-3 {
+  fill: var(--color-purple);
+}
+
 .artboard .point {
   opacity: 0;
 }
@@ -223,4 +232,8 @@ svg *,
 
 .artboard .point-2 {
   fill: var(--color-green);
+}
+
+.artboard .point-3 {
+  fill: var(--color-purple);
 }

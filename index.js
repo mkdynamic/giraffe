@@ -221,7 +221,7 @@ var drawResults = function(opts) {
     for (var idx = 0; idx < cells.length; idx++) {
       var v = '–';
       if (typeof cells[idx] === 'number') {
-        v = cells[idx].toFixed(2);
+        v = cells[idx].toFixed(5);
       } else if (typeof cells[idx] === 'object' && cells[idx].toISOString) {
         v = cells[idx].toISOString();
       } else if (typeof cells[idx] !== 'undefined') {
